@@ -50,3 +50,5 @@ async function* flatten<T>(...iterators: AnyIterable<T>[]): Generator<T> {
     yield* iterator;
   }
 }
+
+export type Push<T> = AsyncIterableSequencer<T>["push"];

@@ -13,6 +13,7 @@
 
 # misc
 /ignore
+.env
 .DS_Store
 .claude
 npm-debug.log*
