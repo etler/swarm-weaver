@@ -6,7 +6,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
 import { ConductorStream, Chain } from "@/lib/ConductorStream";
-import { AsyncIterableSequencer } from "@/lib/AsyncIterableSequencer";
+import { asyncIterableSequencer } from "@/lib/asyncIterableSequencer";
 import { logger } from "@/logger";
 
 const config = {
@@ -130,8 +130,7 @@ class AgentConductor extends ConductorStream<string, string> {
           agentLogger.debug(`onopentag: stack[${chainStack.length}] <${name}> ${JSON.stringify(attributes)}`);
           const parentChain = chainStack.at(-1);
           const conductor = new PromptConductor({ name, attributes }, options);
-          const sequencer = new AsyncIterableSequencer();
-          const chain = sequencer.push.bind(sequencer);
+          const { sequence, push: chain } = asyncIterableSequencer();
           if (parentChain) {
             parentChain(conductor.readable);
             agentLogger.debug(`parent: stack[${chainStack.length}]`);
@@ -140,7 +139,7 @@ class AgentConductor extends ConductorStream<string, string> {
             agentLogger.debug(`this.chain: stack[${chainStack.length}]`);
           }
           chainStack.push(chain);
-          ReadableStream.from(sequencer)
+          ReadableStream.from(sequence)
             .pipeTo(conductor.writable)
             .catch((error: unknown) => {
               throw new Error("Unexpected error in prompt stream", { cause: error });
