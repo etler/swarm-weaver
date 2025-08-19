@@ -70,3 +70,7 @@ To try it out, use the following command:
 ```
 echo "Star Wars" | ./swarm --root="main" example/main.md example/installment.md example/act.md
 ```
+
+© [Tim Etler][author]
+
+[author]: https://github.com/etler
