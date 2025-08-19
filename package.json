@@ -17,9 +17,9 @@
   "scripts": {
     "prepublishOnly": "npm run clean && npm run build && npm run lint && npm run test",
     "prepare": "husky",
-    "clean": "rm -rf dist/ types/",
+    "clean": "rm -rf dist/",
     "build": "pkgroll",
-    "dev": "tsc -w",
+    "dev": "pkgroll -w",
     "start": "node --env-file .env dist/index",
     "lint": "npx eslint",
     "test": "tsc -p tests && vitest run --config tests/vitest.config.mts",
@@ -32,7 +32,6 @@
     "@ai-sdk/google-vertex": "^2.2.27",
     "@ai-sdk/groq": "^1.2.9",
     "@ai-sdk/openai": "^1.3.23",
-    "@types/minimist": "^1.2.5",
     "ai": "^4.3.19",
     "async-iterable-sequencer": "^0.0.0",
     "conductor-stream": "^0.0.0",
@@ -43,6 +42,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@types/minimist": "^1.2.5",
     "@types/node": "^24.0.6",
     "eslint": "~9.21.0",
     "eslint-config-prettier": "^10.1.5",
