@@ -60,3 +60,13 @@ Override `.env` `LOG_LEVEL`
 ### `[files...]`
 
 A list of prompt files in any format. Files can be refered to without their extension in tags and `--root`
+
+## Example
+
+Example prompts are provided in `/example/`. The example prompts produce a detailed synopsis of a provided media franchise and summarizes each installment in acts. The generation is executed in parallel while the sequential order of the output stream is maintained.
+
+To try it out, use the following command:
+
+```
+echo "Star Wars" | ./swarm --root="main" example/main.md example/installment.md example/act.md
+```

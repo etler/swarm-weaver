@@ -4,16 +4,18 @@ import { SwarmWeaver } from "@/SwarmWeaver";
 import minimist from "minimist";
 import { logger } from "@/logger";
 import { createWriteStream } from "node:fs";
+import path from "node:path";
 
-const { _: fileNames, ...args } = minimist(process.argv.slice(2), { boolean: true });
+const { _: filePaths, ...args } = minimist(process.argv.slice(2), { boolean: true });
 
 (async () => {
-  logger.debug(`Starting Swarm Weaver with Prompts: ${fileNames.join(", ")}`);
+  logger.debug(`Starting Swarm Weaver with Prompts: ${filePaths.join(", ")}`);
   const fileResults = await Promise.allSettled(
-    fileNames.map(async (fileName) => {
-      logger.debug(`Loading Prompt: "${fileName}"`);
-      const content = await readFile(fileName, "utf8");
-      logger.debug(`Loaded Prompt: "${fileName}"`);
+    filePaths.map(async (filePath) => {
+      logger.debug(`Loading Prompt: "${filePath}"`);
+      const content = await readFile(filePath, "utf8");
+      logger.debug(`Loaded Prompt: "${filePath}"`);
+      const fileName = path.basename(filePath);
       return [fileName, content] as const;
     }),
   );
