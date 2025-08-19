@@ -1,8 +1,9 @@
 {
-  "name": "node-simple-library-template",
+  "name": "swarm-weaver",
   "version": "0.0.0",
-  "repository": "github:etler/node-simple-library-template",
-  "main": "dist/index.js",
+  "repository": "github:etler/swarm-weaver",
+  "type": "module",
+  "module": "dist/index.js",
   "types": "types/index.d.ts",
   "exports": {
     ".": {
@@ -34,6 +35,8 @@
     "@ai-sdk/openai": "^1.3.23",
     "@types/minimist": "^1.2.5",
     "ai": "^4.3.19",
+    "async-iterable-sequencer": "^0.0.0",
+    "conductor-stream": "^0.0.0",
     "htmlparser2": "^10.0.0",
     "minimist": "^1.2.8",
     "winston": "^3.17.0",

@@ -5,8 +5,8 @@ import { createAzure } from "@ai-sdk/azure";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
-import { ConductorStream, Chain } from "@/lib/ConductorStream";
-import { asyncIterableSequencer } from "@/lib/asyncIterableSequencer";
+import { ConductorStream } from "conductor-stream";
+import { asyncIterableSequencer, Chain } from "async-iterable-sequencer";
 import { logger } from "@/logger";
 
 const config = {
@@ -130,7 +130,7 @@ class AgentConductor extends ConductorStream<string, string> {
           agentLogger.debug(`onopentag: stack[${chainStack.length}] <${name}> ${JSON.stringify(attributes)}`);
           const parentChain = chainStack.at(-1);
           const conductor = new PromptConductor({ name, attributes }, options);
-          const { sequence, push: chain } = asyncIterableSequencer();
+          const { sequence, chain } = asyncIterableSequencer();
           if (parentChain) {
             parentChain(conductor.readable);
             agentLogger.debug(`parent: stack[${chainStack.length}]`);
