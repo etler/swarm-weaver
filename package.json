@@ -4,22 +4,21 @@
   "repository": "github:etler/swarm-weaver",
   "type": "module",
   "module": "dist/index.js",
-  "types": "types/index.d.ts",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./types/index.d.ts",
+    "import": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
   "files": [
-    "dist",
-    "types"
+    "dist"
   ],
   "scripts": {
     "prepublishOnly": "npm run clean && npm run build && npm run lint && npm run test",
-    "prepare": "husky && ts-patch install -s",
+    "prepare": "husky",
     "clean": "rm -rf dist/ types/",
-    "build": "tsc",
+    "build": "pkgroll",
     "dev": "tsc -w",
     "start": "node --env-file .env dist/index",
     "lint": "npx eslint",
@@ -52,11 +51,10 @@
     "globals": "^16.0.0",
     "husky": "~9.1.7",
     "lint-staged": "~15.4.3",
+    "pkgroll": "^2.15.3",
     "prettier": "~3.5.2",
-    "ts-patch": "~3.3.0",
     "typescript": "~5.7.3",
     "typescript-eslint": "^8.25.0",
-    "typescript-transform-paths": "~3.5.3",
     "vitest": "^3.0.7"
   }
 }
