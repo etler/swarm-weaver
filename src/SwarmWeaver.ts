@@ -31,6 +31,8 @@ const registryOptions = {
 
 type PromptMap = Record<string, string>;
 
+let agentIndex = 0;
+
 interface SwarmWeaverOptions {
   provider: keyof typeof registryOptions;
   model: string;
@@ -53,7 +55,7 @@ export class SwarmWeaver {
       new TransformStream({
         flush() {
           process.stdout.write("\n");
-          logger.info("", { total: "agent" });
+          logger.info(`${agentIndex} agents spawned`, { total: "agent" });
           timer.done({ message: "" });
         },
       }),
@@ -112,15 +114,13 @@ interface Metadata {
   prompt: string;
 }
 
-let agentIndex = 0;
-
 class AgentConductor extends ConductorStream<string, string> {
   private chain: Chain<string>;
   constructor(prompt: string, options: ContextOptions, meta: Metadata) {
     const id = `Agent[${agentIndex++}](${meta.prompt})`;
     const agentLogger = logger.child({ id, group: "agent" });
     const timer = agentLogger.startTimer();
-    agentLogger.info("");
+    agentLogger.verbose("");
     agentLogger.debug(`init: ${prompt}`);
     let maybeChain: Chain<string> | undefined;
     const chainStack: Chain<string>[] = [];
