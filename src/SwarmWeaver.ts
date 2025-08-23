@@ -178,7 +178,7 @@ class AgentConductor extends ConductorStream<string, string> {
         parser.write(chunk);
       },
       finish(chain) {
-        timer.done({ message: "" });
+        timer.done({ level: "verbose", message: "" });
         let parentChain: Chain<string> | undefined;
         while ((parentChain = chainStack.pop())) {
           parentChain(null);
