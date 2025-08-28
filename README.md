@@ -1,6 +1,6 @@
 # Swarm Weaver
 
-A proof of concept project demonstrating [parallel recursive streaming AI swarms](https://www.timetler.com/2025/08/23/parallel-recursive-streaming-ai-swarms/) enabled by the [Stream Weaver Framework pattern](https://github.com/etler/stream-weaver).
+A proof of concept project demonstrating [parallel recursive streaming AI swarms](https://www.timetler.com/2025/08/23/parallel-recursive-streaming-ai-swarms/).
 
 It enables composing AI agents that can independently spawn child AI agents over a single output stream with minimal stream blocking, streaming generated content as soon as it is available.
 
