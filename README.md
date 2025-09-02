@@ -24,7 +24,19 @@ Write the outline of the story. For each chapter use XML to spawn a sub agent to
 </chapter>
 ```
 
-{{_content_}} is a special interpolation value that pipes in a stream either from stdin for the cli command, or the contents of the XML tag, so you could actually put another agent in a nested XML tag.
+## Interpolation Values
+
+### `{{attribute}}`
+
+Any tag attributes provided to a sub agent tag will be interpolated into an `{{attribute}}` interpolation placeholder with the `attribute` identifier matching the names of the tag attributes.
+
+### `{{_content_}}`
+
+`{{_content_}}` is a special interpolation placeholder that is replaced with the content piped in from a stream, either from stdin for the cli command, or the contents of the XML tag, so you could actually put another agent in a nested XML tag.
+
+### `{{_context_}}`
+
+`{{_context_}}` is a special interpolation placeholder is substituted with the direct generated output of the parent agent up until the point the child agent was spawned. It does not include the contents of any spawned child agents.
 
 ## .env
 
