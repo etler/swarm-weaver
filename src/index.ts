@@ -35,7 +35,7 @@ const { _: filePaths, ...args } = minimist(process.argv.slice(2), { boolean: tru
 
   logger.debug(`Loaded prompt map: ${Object.keys(promptMap).join(", ")}`);
 
-  const { provider: providerArg, model: modelArg, root, output, ...attr } = args;
+  const { provider: providerArg, model: modelArg, throttle: throttleArg, root, output, ...attr } = args;
   const attributes = Object.fromEntries(
     Object.entries(attr).flatMap<[string, string]>(([key, value]: [string, unknown]) => {
       if (key.startsWith("attr-")) {
@@ -48,6 +48,7 @@ const { _: filePaths, ...args } = minimist(process.argv.slice(2), { boolean: tru
 
   const provider = typeof providerArg === "string" ? providerArg : process.env["PROVIDER"];
   const model = typeof modelArg === "string" ? modelArg : process.env["MODEL"];
+  const throttle = typeof throttleArg === "number" ? throttleArg : undefined;
 
   if (provider === undefined || model === undefined) {
     logger.error("A provider and model must be provided");
@@ -74,9 +75,40 @@ const { _: filePaths, ...args } = minimist(process.argv.slice(2), { boolean: tru
       : output === true
         ? Writable.fromWeb(new WritableStream())
         : process.stdout;
-  Readable.fromWeb(
-    weaver.run(typeof root === "string" ? { name: root, attributes } : { name: null }, inputStream),
-  ).pipe(outputStream);
+  let pipeline = weaver.run(typeof root === "string" ? { name: root, attributes } : { name: null }, inputStream);
+  if (throttle !== undefined) {
+    pipeline = pipeline.pipeThrough(new ThrottleStream({ rate: throttle }));
+  }
+  Readable.fromWeb(pipeline).pipe(outputStream);
 })().catch((error: unknown) => {
   throw new Error("Error in main:", { cause: error });
 });
+
+class ThrottleStream extends TransformStream<string, string> {
+  constructor({ rate }: { rate: number }) {
+    let maybeController = null as TransformStreamDefaultController<string> | null;
+    const buffer = new TransformStream<string, string>();
+    const bufferWriter = buffer.writable.getWriter();
+    super({
+      start: (controller) => {
+        maybeController = controller;
+      },
+      transform: async (chunk) => {
+        await bufferWriter.write(chunk);
+      },
+    });
+    if (maybeController === null) {
+      throw new Error("ThrottleStream controller could not be initialized");
+    }
+    const controller = maybeController;
+    void (async () => {
+      for await (const token of buffer.readable) {
+        controller.enqueue(token);
+        await new Promise((resolve) => {
+          setTimeout(resolve, rate);
+        });
+      }
+      controller.terminate();
+    })();
+  }
+}
