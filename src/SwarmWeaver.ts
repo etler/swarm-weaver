@@ -72,6 +72,7 @@ type PromptProperties =
   | {
       name: string;
       attributes: Record<string, string>;
+      context: string;
     }
   | {
       name: null;
@@ -81,7 +82,7 @@ class PromptConductor extends ConductorStream<string, string> {
   private prompt: string;
   constructor(properties: PromptProperties, options: ContextOptions) {
     logger.debug(`Prompt "${properties.name}" init`);
-    const { name, attributes } = properties.name !== null ? properties : {};
+    const { name, attributes, context } = properties.name !== null ? properties : {};
     const maybePrompt: string | undefined = name !== undefined ? options.promptMap[name] : "{{_content_}}";
     let content = "";
     super({
@@ -91,6 +92,7 @@ class PromptConductor extends ConductorStream<string, string> {
       },
       finish: (chain) => {
         this.prompt = this.prompt.replaceAll(/{{_content_}}/gi, content);
+        this.prompt = this.prompt.replaceAll(/{{_context_}}/gi, context ?? "");
         logger.debug(`Prompt "${properties.name}" ready`);
         const conductor = new AgentConductor(this.prompt, options, { prompt: name ?? "stream" });
         chain(conductor.readable);
@@ -122,6 +124,7 @@ class AgentConductor extends ConductorStream<string, string> {
     const timer = agentLogger.startTimer();
     agentLogger.verbose("");
     agentLogger.debug(`init: ${prompt}`);
+    let context = "";
     let maybeChain: Chain<string> | undefined;
     const chainStack: Chain<string>[] = [];
     const parser = new Parser(
@@ -129,7 +132,7 @@ class AgentConductor extends ConductorStream<string, string> {
         onopentag: (name, attributes) => {
           agentLogger.debug(`onopentag: stack[${chainStack.length}] <${name}> ${JSON.stringify(attributes)}`);
           const parentChain = chainStack.at(-1);
-          const conductor = new PromptConductor({ name, attributes }, options);
+          const conductor = new PromptConductor({ name, attributes, context }, options);
           const { sequence, chain } = asyncIterableSequencer();
           if (parentChain) {
             parentChain(conductor.readable);
@@ -144,9 +147,11 @@ class AgentConductor extends ConductorStream<string, string> {
             .catch((error: unknown) => {
               throw new Error("Unexpected error in prompt stream", { cause: error });
             });
+          context += `<${[name, ...Object.entries(attributes).map(([key, value]) => `${key}=${value}`)].join(" ")}>`;
         },
         ontext: (text) => {
           agentLogger.debug(`ontext: stack[${chainStack.length}] "${text}"`);
+          context += text;
           const parentChain = chainStack.at(-1);
           if (parentChain) {
             agentLogger.debug(`parentChain: stack[${chainStack.length}]`);
@@ -156,8 +161,9 @@ class AgentConductor extends ConductorStream<string, string> {
             this.chain([text].values());
           }
         },
-        onclosetag: () => {
+        onclosetag: (name) => {
           agentLogger.debug(`onclosetag: stack[${chainStack.length}]`);
+          context += `<${name}>`;
           const parentChain = chainStack.pop();
           if (parentChain) {
             parentChain(null);

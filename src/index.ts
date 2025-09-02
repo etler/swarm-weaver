@@ -75,7 +75,10 @@ const { _: filePaths, ...args } = minimist(process.argv.slice(2), { boolean: tru
       : output === true
         ? Writable.fromWeb(new WritableStream())
         : process.stdout;
-  let pipeline = weaver.run(typeof root === "string" ? { name: root, attributes } : { name: null }, inputStream);
+  let pipeline = weaver.run(
+    typeof root === "string" ? { name: root, attributes, context: "" } : { name: null },
+    inputStream,
+  );
   if (throttle !== undefined) {
     pipeline = pipeline.pipeThrough(new ThrottleStream({ rate: throttle }));
   }
