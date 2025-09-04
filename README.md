@@ -79,12 +79,16 @@ A list of prompt files in any format. Files can be refered to without their exte
 
 ## Example
 
-Example prompts are provided in `/example/`. The example prompts produce a detailed synopsis of a provided media franchise and summarizes each installment in acts. The generation is executed in parallel while the sequential order of the output stream is maintained.
+Example prompts are provided in `/example/`
+
+### Example: Franchise Synopsis
+
+The example prompts produce a detailed synopsis of a provided media franchise and summarizes each installment in acts. The generation is executed in parallel while the sequential order of the output stream is maintained.
 
 To try it out, use the following command:
 
 ```
-echo "Star Wars" | ./swarm --root="main" example/main.md example/installment.md example/act.md
+echo "Star Wars" | ./swarm --root="main" example/synopsis/main.md example/synopsis/installment.md example/synopsis/act.md
 ```
 
 © [Tim Etler][author]
