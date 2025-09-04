@@ -5,7 +5,7 @@ import { createAzure } from "@ai-sdk/azure";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
-import { ConductorStream } from "conductor-stream";
+import { DelegateStream } from "delegate-stream";
 import { asyncIterableSequencer, Chain } from "async-iterable-sequencer";
 import { logger } from "@/logger";
 
@@ -50,8 +50,8 @@ export class SwarmWeaver {
   }
   run(properties: PromptProperties, stream: ReadableStream): ReadableStream {
     const timer = logger.startTimer();
-    const conductor = new PromptConductor(properties, { model: this.model, promptMap: this.promptMap });
-    return stream.pipeThrough(conductor).pipeThrough(
+    const delegator = new PromptDelegator(properties, { model: this.model, promptMap: this.promptMap });
+    return stream.pipeThrough(delegator).pipeThrough(
       new TransformStream({
         flush() {
           process.stdout.write("\n");
@@ -78,7 +78,7 @@ type PromptProperties =
       name: null;
     };
 
-class PromptConductor extends ConductorStream<string, string> {
+class PromptDelegator extends DelegateStream<string, string> {
   private prompt: string;
   constructor(properties: PromptProperties, options: ContextOptions) {
     logger.debug(`Prompt "${properties.name}" init`);
@@ -94,8 +94,8 @@ class PromptConductor extends ConductorStream<string, string> {
         this.prompt = this.prompt.replaceAll(/{{_content_}}/gi, content);
         this.prompt = this.prompt.replaceAll(/{{_context_}}/gi, context ?? "");
         logger.debug(`Prompt "${properties.name}" ready`);
-        const conductor = new AgentConductor(this.prompt, options, { prompt: name ?? "stream" });
-        chain(conductor.readable);
+        const delegator = new AgentDelegator(this.prompt, options, { prompt: name ?? "stream" });
+        chain(delegator.readable);
         chain(null);
       },
     });
@@ -116,7 +116,7 @@ interface Metadata {
   prompt: string;
 }
 
-class AgentConductor extends ConductorStream<string, string> {
+class AgentDelegator extends DelegateStream<string, string> {
   private chain: Chain<string>;
   constructor(prompt: string, options: ContextOptions, meta: Metadata) {
     const id = `Agent[${agentIndex++}](${meta.prompt})`;
@@ -132,18 +132,18 @@ class AgentConductor extends ConductorStream<string, string> {
         onopentag: (name, attributes) => {
           agentLogger.debug(`onopentag: stack[${chainStack.length}] <${name}> ${JSON.stringify(attributes)}`);
           const parentChain = chainStack.at(-1);
-          const conductor = new PromptConductor({ name, attributes, context }, options);
+          const delegator = new PromptDelegator({ name, attributes, context }, options);
           const { sequence, chain } = asyncIterableSequencer();
           if (parentChain) {
-            parentChain(conductor.readable);
+            parentChain(delegator.readable);
             agentLogger.debug(`parent: stack[${chainStack.length}]`);
           } else {
-            this.chain(conductor.readable);
+            this.chain(delegator.readable);
             agentLogger.debug(`this.chain: stack[${chainStack.length}]`);
           }
           chainStack.push(chain);
           ReadableStream.from(sequence)
-            .pipeTo(conductor.writable)
+            .pipeTo(delegator.writable)
             .catch((error: unknown) => {
               throw new Error("Unexpected error in prompt stream", { cause: error });
             });
